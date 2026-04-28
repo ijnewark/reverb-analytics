@@ -32,112 +32,28 @@ python reverb_scraper.py --all
 python reverb_scraper.py --query "Fender Stratocaster" --export
 ```
 
-## Usage
+## Future Scope: Secondary Marketplaces
 
-```
-usage: reverb_scraper.py [-h] [--query QUERY] [--pages PAGES] [--all] [--export]
+While currently focused on Reverb, the architecture of this project can be extended to other secondary marketplace APIs to create a unified gear-valuation tool.
 
-Scrape and analyse Reverb sold listings for deals.
+### eBay Integration
+The [eBay Buy APIs](https://developer.ebay.com/api-docs/buy/static/main.html) (specifically the Browse API) provide access to completed and sold items. Integrating eBay would significantly increase the dataset size for computing price statistics.
 
-options:
-  -h, --help            show this help message and exit
-  --query QUERY, -q QUERY
-                        Single search query (e.g. "Gibson Les Paul")
-  --pages PAGES, -p PAGES
-                        Max pages to fetch per query (default: 20)
-  --all, -a             Run all queries from config.SEARCH_QUERIES
-  --export              Export results to CSV after analysis
-```
+**Potential Challenges:**
+- **Authentication:** eBay uses OAuth 2.0, requiring a more complex header setup than Reverb.
+- **Categorisation:** eBay's category tree is much deeper and would require a more robust `MODEL_CATEGORY_MAP`.
+- **Filtering:** eBay's "Sold" state is managed via `fieldgroups=MATCHING_ITEMS` and specific item filters.
+
+### Implementation Strategy
+To support multiple marketplaces, the scraper could be refactored into a base class with marketplace-specific implementations (e.g., `ReverbScraper`, `EbayScraper`), allowing the core analysis and storage logic to remain platform-agnostic.
 
 ## How It Works
 
 ### 1. Data Collection
-
 Fetches sold listings via `GET /api/listings?state=sold&query=<MODEL>` from the Reverb API. Results are stored in a local SQLite database (`data/reverb_listings.db`) to avoid re-fetching on subsequent runs.
 
 ### 2. Model Normalisation (Fuzzy Matching)
-
-Listing titles on Reverb are notoriously inconsistent. This tool uses `rapidfuzz.token_sort_ratio` to map each title to a canonical model name:
-
-| Raw Title | Canonical Match |
-|-----------|-----------------|
-| "Gibson LP Standard" | Gibson Les Paul Standard |
-| "les paul std gibson" | Gibson Les Paul Standard |
-| "Fender Strat 60s" | Fender Stratocaster |
-| "PRS Custom 24 CE" | PRS Custom 24 |
-
-### 3. Underpricing Detection
-
-For each (model, condition) group, the tool computes the median price and standard deviation from all sold listings. Active or recent sold listings with a z-score below the configured threshold (default: -1.5) are flagged as underpriced.
-
-### 4. Miscategorisation Detection
-
-Each canonical model has an expected category (e.g. "Gibson Les Paul" -> "Electric Guitars"). If a listing's stated category doesn't fuzzy-match its expected category, it's flagged. This is useful because miscategorised items often get fewer views and can go cheaper.
-
-## Configuration
-
-Edit `config.py` to customise:
-
-| Setting | Description |
-|---------|-------------|
-| `SEARCH_QUERIES` | List of search terms to run with `--all` |
-| `CANONICAL_MODELS` | Reference models for fuzzy matching |
-| `FUZZY_MATCH_THRESHOLD` | Minimum score (0-100) to accept a model match (default: 70) |
-| `Z_SCORE_THRESHOLD` | How far below the median to flag as underpriced (default: -1.5) |
-| `API_DELAY_SECONDS` | Delay between API calls (default: 0.5) |
-| `API_MAX_PAGES` | Max pages to fetch per query (default: 20) |
-
-## Output
-
-The console prints a summary of all flagged deals, including:
-
-- Title and URL
-- Canonical model and condition
-- Price in GBP
-- Z-score
-- Flags (UNDERPRICED / MISCATEGORISED)
-
-With `--export`, a full CSV of all listings is saved to `data/sold_listings.csv`.
-
-Example output:
-
-```
-======================================================================
-FLAGGED DEALS
-======================================================================
-Total flagged: 4
-  Underpriced: 3
-  Miscategorised: 1
-======================================================================
-
-[UNDERPRICED] Gibson Les Paul Standard 2019 Honeyburst...
-  Model: Gibson Les Paul Standard | Condition: Good
-  Price: GBP 1,050.00 | z-score: -2.14
-  URL: https://reverb.com/item/12345678
-
-[UNDERPRICED] Gibson Les Paul Standard 2019 Honeyburst...
-  Model: Gibson Les Paul Standard | Condition: Very Good
-  Price: GBP 1,120.00 | z-score: -1.82
-  URL: https://reverb.com/item/12345679
-
-[UNDERPRICED] Fender Stratocaster Player Series Black...
-  Model: Fender Stratocaster | Condition: Good
-  Price: GBP 395.00 | z-score: -1.67
-  URL: https://reverb.com/item/12345680
-
-[MISCATEGORISED] Fender Stratocaster American Pro II...
-  Model: Fender Stratocaster | Condition: Excellent
-  Price: GBP 880.00 | z-score: -0.43
-  URL: https://reverb.com/item/12345681
-```
-
-## Limitations
-
-- **Sold prices are asking prices**, not final transacted prices. Treat them as upper bounds.
-- **History is capped at ~1 year** by Reverb. Start caching data now if you want long-term tracking.
-- **API ToS** prohibits using the API for "analytics or machine learning" at scale. Fine for personal use.
-- **No authentication** means limited field access (title, price, condition, category only).
+Listing titles on Reverb are notoriously inconsistent. This tool uses `rapidfuzz.token_sort_ratio` to map each title to a canonical model name.
 
 ## License
-
-MIT License. See [LICENSE](LICENSE) for details.
+MIT
