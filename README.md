@@ -1,4 +1,4 @@
-# reverb-deals-finder
+# reverb-analytics
 
 Python scraper that analyses Reverb sold listings by model using fuzzy string matching to identify underpriced and miscategorised gear listings.
 
@@ -14,8 +14,8 @@ This tool uses the [Reverb public API](https://reverb.com/page/integrations) to:
 ## Installation
 
 ```bash
-git clone https://github.com/ijnewark/reverb-deals-finder.git
-cd reverb-deals-finder
+git clone https://github.com/ijnewark/reverb-analytics.git
+cd reverb-analytics
 pip install -r requirements.txt
 ```
 
@@ -35,8 +35,7 @@ python reverb_scraper.py --query "Fender Stratocaster" --export
 ## Usage
 
 ```
-usage: reverb_scraper.py [-h] [--query QUERY] [--pages PAGES]
-                         [--all] [--export]
+usage: reverb_scraper.py [-h] [--query QUERY] [--pages PAGES] [--all] [--export]
 
 Scrape and analyse Reverb sold listings for deals.
 
@@ -61,7 +60,7 @@ Fetches sold listings via `GET /api/listings?state=sold&query=<MODEL>` from the 
 Listing titles on Reverb are notoriously inconsistent. This tool uses `rapidfuzz.token_sort_ratio` to map each title to a canonical model name:
 
 | Raw Title | Canonical Match |
-|---|---|
+|-----------|-----------------|
 | "Gibson LP Standard" | Gibson Les Paul Standard |
 | "les paul std gibson" | Gibson Les Paul Standard |
 | "Fender Strat 60s" | Fender Stratocaster |
@@ -80,7 +79,7 @@ Each canonical model has an expected category (e.g. "Gibson Les Paul" -> "Electr
 Edit `config.py` to customise:
 
 | Setting | Description |
-|---|---|
+|---------|-------------|
 | `SEARCH_QUERIES` | List of search terms to run with `--all` |
 | `CANONICAL_MODELS` | Reference models for fuzzy matching |
 | `FUZZY_MATCH_THRESHOLD` | Minimum score (0-100) to accept a model match (default: 70) |
@@ -99,6 +98,38 @@ The console prints a summary of all flagged deals, including:
 - Flags (UNDERPRICED / MISCATEGORISED)
 
 With `--export`, a full CSV of all listings is saved to `data/sold_listings.csv`.
+
+Example output:
+
+```
+======================================================================
+FLAGGED DEALS
+======================================================================
+Total flagged: 4
+  Underpriced: 3
+  Miscategorised: 1
+======================================================================
+
+[UNDERPRICED] Gibson Les Paul Standard 2019 Honeyburst...
+  Model: Gibson Les Paul Standard | Condition: Good
+  Price: GBP 1,050.00 | z-score: -2.14
+  URL: https://reverb.com/item/12345678
+
+[UNDERPRICED] Gibson Les Paul Standard 2019 Honeyburst...
+  Model: Gibson Les Paul Standard | Condition: Very Good
+  Price: GBP 1,120.00 | z-score: -1.82
+  URL: https://reverb.com/item/12345679
+
+[UNDERPRICED] Fender Stratocaster Player Series Black...
+  Model: Fender Stratocaster | Condition: Good
+  Price: GBP 395.00 | z-score: -1.67
+  URL: https://reverb.com/item/12345680
+
+[MISCATEGORISED] Fender Stratocaster American Pro II...
+  Model: Fender Stratocaster | Condition: Excellent
+  Price: GBP 880.00 | z-score: -0.43
+  URL: https://reverb.com/item/12345681
+```
 
 ## Limitations
 
