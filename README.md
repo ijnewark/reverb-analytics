@@ -32,6 +32,43 @@ python reverb_scraper.py --all
 python reverb_scraper.py --query "Fender Stratocaster" --export
 ```
 
+## Example Output
+
+```
+Fetching sold listings for 'Gibson Les Paul'...
+  Page 1: fetched 50 listings (total: 50)
+  Page 2: fetched 50 listings (total: 100)
+  Page 3: fetched 50 listings (total: 150)
+  No next page. Stopping.
+Done. Total listings fetched: 150
+
+Loaded 150 total listings from database.
+Computed price stats for 6 (model, condition) groups.
+
+======================================================================
+FLAGGED DEALS
+======================================================================
+Total flagged: 8
+  Underpriced: 6
+  Miscategorised: 2
+======================================================================
+
+[UNDERPRICED] Gibson Les Paul Standard 2019 Bourbon Burst w/...
+  Model: Gibson Les Paul Standard | Condition: Excellent
+  Price: USD 1450.00 | z-score: -2.14
+  URL: https://reverb.com/item/12345678
+
+[UNDERPRICED,MISCATEGORISED] Gibson LP Std Traditional 2017 ...
+  Model: Gibson Les Paul Standard | Condition: Good
+  Price: USD 1100.00 | z-score: -1.87
+  URL: https://reverb.com/item/23456789
+
+[UNDERPRICED] Gibson Les Paul Standard 50s Gold Top - Mint C...
+  Model: Gibson Les Paul Standard | Condition: Mint
+  Price: USD 1875.00 | z-score: -1.76
+  URL: https://reverb.com/item/34567890
+```
+
 ## Future Scope: Secondary Marketplaces
 
 While currently focused on Reverb, the architecture of this project can be extended to other secondary marketplace APIs to create a unified gear-valuation tool.
